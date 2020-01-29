@@ -7,7 +7,7 @@ playback the music on any connected playback device.
 
 ## Main Components
 
-There are 3 main components that are used to build Mel instances. For each of
+There are three main components that are used to build Mel Instances. For each of
 them, there is a specification for its programming API and REST API. Here is an
 overview for each of them:
 
@@ -31,17 +31,19 @@ The **Mel Playback Agent**
 
 There are two types of Mel Users:  
 **Registered Mel Users** are registered at a specific Mel Instance and can be
-identified using the <username>@<domain> scheme, where _domain_ is the domain of 
-the users User Host Instance. All user data of Registered Mel Users is 
-synchronized with its User Host Instance once connecting to it is possible.
+identified using the <username>@<domain> scheme, where _domain_ is the domain of
+the users User Host Instance. All user data of Registered Mel Users is
+synchronized with its User Host Instance once connecting to it is possible.  
 **Unregistered Mel Users**
 
 # Glossary
 
-**Mel instance** - Software that implements at least one of the three main
+**Mel Instance** - Software that implements at least one of the three main
 components of Mel and exposes a Mel Api of at least one of them.
-**User Host Instance** - A Mel Instance, which implements the Mel User Database 
+
+**User Host Instance** - A Mel Instance, which implements the Mel User Database
 and its REST API.
+
 **Generic Music Identifier** - An ID that is generated from a tracks essential
 meta data. See [GMID Generator](https://github.com/FritzHeiden/gmid-generator)
 
