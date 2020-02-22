@@ -2,6 +2,20 @@
 
 ## Contents
 
+1. [User Experience](#1-user-experience)
+   1. [Music Playback](#11-music-playback)
+      1. [Playback Queue](#111-playback-queue)
+   2. [Core Components](#12-core-components)
+      1. [Mel Libraries](#121-mel-libraries)
+         1. [Streaming and synchronization](#streaming-and-synchronization)
+      2. [Mel Playback Managers](#122-mel-playback-managers)
+      3. [Mel User Profiles](#123-mel-user-profiles)
+         1. [Playlists](#playlists)
+         2. [Collections](#collections)
+         3. [Local Profiles](#local-profiles)
+   3. [Listening Parties](#13-listening-parties)
+2. [Architecture](#2-architecture)
+
 ## 1 User Experience
 
 Mel is a music organizer and player, that connects to other instances of
@@ -175,6 +189,10 @@ As every participant stores the party data in their profile, so there is no
 single host to the party. Additionally, when the party is over, every
 participant can revisit the tracks of past parties, to, for example, create
 playlists from it. For better identification, each party has a title.
+
+[↑ top](#mel-specification)
+
+## 2 Architecture
 
 ### Main Components
 
