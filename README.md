@@ -2,19 +2,21 @@
 
 ## Contents
 
-1. [User Experience](#1-user-experience)
-   1. [Music Playback](#11-music-playback)
-      1. [Playback Queue](#111-playback-queue)
-   2. [Core Components](#12-core-components)
-      1. [Mel Libraries](#121-mel-libraries)
-         1. [Streaming and synchronization](#streaming-and-synchronization)
-      2. [Mel Playback Managers](#122-mel-playback-managers)
-      3. [Mel User Profiles](#123-mel-user-profiles)
-         1. [Playlists](#playlists)
-         2. [Collections](#collections)
-         3. [Local Profiles](#local-profiles)
-   3. [Listening Parties](#13-listening-parties)
-2. [Architecture](#2-architecture)
+- [1 User Experience](#1-user-experience)
+  - [1.1 Music Playback](#11-music-playback)
+    - [1.1.1 Playback Queue](#111-playback-queue)
+  - [1.2 The Mel Ecosystem](#12-core-components)
+    - [1.2.1 Mel Libraries](#121-mel-libraries)
+      - [Streaming and synchronization](#streaming-and-synchronization)
+    - [1.2.2 Mel Playback Managers](#122-mel-playback-managers)
+    - [1.2.3 Mel User Profiles](#123-mel-user-profiles)
+      - [Playlists](#playlists)
+      - [Collections](#collections)
+      - [Local Profiles](#local-profiles)
+  - [1.3 Listening Parties](#13-listening-parties)
+  - [1.4 Plugin System](#14-plugin-system)
+- [2 Architecture](#2-architecture)
+- [3 Design System](#3-design-system)
 
 ## 1 User Experience
 
@@ -44,28 +46,60 @@ which can be appended or inserted after the currently playing track.
 Accordingly, tracks can also be removed from the queue at any time.
 Furthermore, the user can reorder the queue, by manually selecting a tracks new
 positing in the list or by shuffling the whole queue or just the tracks
-remaining to play.  
+remaining to play. When starting a new queue, the old ones get saved to return 
+to them later or when accidentally overwriting the current queue.  
 There are different looping modes to choose from. With no looping mode turned
 on, the playback stops as soon as all tracks from the queue have been played.
 Looping the whole queue will start the queue from the beginning, once all
 tracks have been played. Lastly, just the current track can be looped.
 
-### 1.2 Core Components
+### 1.2 The Mel Ecosystem
 
-The Mel infrastructure is based around three core components: The Mel Library,
-the Mel Playback Manager and the Mel User Profiles. These components are used
-to facilitate more complex features. For example, the music player uses the
-Mel Library component to get audio data, the Mel Playback Manager to output
-the audio data to audio interfaces and the Mel User Profiles to read
-Playlists. Each component is independent from the other, so a Mel Instance may
-only implement one or two of them. For example, only using the Mel User
-Profiles can be useful to have a server to only synchronize Mel User Profiles
-with, to access profile data on any device. Another example would be to only
-implement the Mel Playback Manager to attach a set of speakers to it, in order
-to play music on them over the network in your flat. However, this is not very
-important for the average user, it just demonstrates the number of potential
-use cases of Mel. As with the nature of Open Source Software, anyone could
-implement software that is compatible with existing Mel implementations.
+The Mel Ecosystem consists of multiple Mel Instances that communicate with
+each other using a standardized language. As this language is open source,
+anyone can study it and develop new system that can be integrated into the
+broad ecosystem. Its upon the user how big the ecosystem might be, it may just 
+exist in your local network at home or reach beyond to instances on the 
+internet.
+
+Each Mel Instance in the system can have different roles:
+
+- **Mel Center Instance** - instance with fully fledged feature set. They can
+  be configured to serve any purpose and are the most used ones.
+- **Mel Profile Instance** - only deals with user data. They are mostly used
+  to synchronize user profiles and are therefore publicly accessible.
+- **Mel Playback Instance** - handles playback commands. They are used to just
+  playback music and require another instance to send playback commands and
+  stream the audio data. A use case might be to have a small device running
+  this instance, which is hooked up to a set of speakers, so you can play
+  music from any device.
+- **Mel Library Instance** - collects data about music available on its device 
+  and serves it to other instances. This might be used in more complex setups.
+
+Most users will get in contact with just the Mel Center Instance and the Mel 
+Profile Instance. A Mel Center Instance might be a mobile app, a desktop 
+application or an application on any other enduser device. Mel Profile 
+Instances on the other hand will run on a server with an internet address that 
+anyone can use to access the instance. Here, users may register an account 
+which they can use to login to any Mel Center Instance they use, which will 
+synchronize all the user data with the Mel Profile Instance and across all 
+devices.  
+The other two instances, especially the Mel Library Instances are used im more 
+advanced scenarios. Furthermore, these are not the only instance to exist. 
+Depending on special use cases, new types of instances may be introduced.
+
+The type of an instance is defined by what features it implements. There are 
+three core components that make up each instance: the Mel Library, the Mel 
+Playback Manager and the Mel User Profile. Each component specializes on 
+specific features, so depending on what components the instance implements, 
+one can derive its type. Therefore, a Mel Center Instance is also a Mel 
+Profile Instance, a Mel Playback Instance and a Mel Library Instance, as it 
+implements all components. It just configures them in different ways.  
+More complex features are built from these components. For example, the music 
+player uses the Mel Library component to get audio data, the Mel Playback 
+Manager to output the audio data to audio interfaces and the Mel User Profiles 
+to read Playlists.
+
 
 #### 1.2.1 Mel Libraries
 
@@ -90,6 +124,16 @@ Release related information
 - Available tracks
 - Available formats, like MP3 or FLAC
 - Similar releases
+
+The user may add tags to artists, albums, tracks, playlists and collections to 
+organize their music. These tags can be used in search or filters, making it 
+possible to quickly create playback queues. These tags are presisted in the 
+user's profile. It also is possible to incorporate tags of other users when 
+browsing libraries.  
+In addition to tags, which are plain text labels, there are section tags for 
+tracks. These can be used to tag a specific section inside a track, such as 
+intros, outros, skits and so on. This enables the user to skip long intros or 
+outros by default.
 
 ##### Streaming and synchronization
 
@@ -190,9 +234,26 @@ single host to the party. Additionally, when the party is over, every
 participant can revisit the tracks of past parties, to, for example, create
 playlists from it. For better identification, each party has a title.
 
+### 1.4 Plugin System
+
+A plugin system allows third parties to extend Mel's capabilities. This also 
+enables users to only install plugins with features they intend to use, rather 
+than dealing with potential bugs and other issues caused by features they 
+never use. So far there are two types of plugins: Library plugins and Profile 
+plugins.  
+Library plugins enable the user to introduce new content sources to their 
+library, such as music from YouTube, Spotify, SoundCloud and so on. Profile 
+plugins allow users to connect their Mel profile with profiles of external 
+services like Last.fm.
+
 [↑ top](#mel-specification)
 
 ## 2 Architecture
+
+TODO:
+
+- C4 Model: context diagram, container diagram?
+- interfaces: HTTP API and libraries
 
 ### Main Components
 
@@ -534,3 +595,5 @@ See [GMID Generator](https://github.com/FritzHeiden/gmid-generator)
 # Acronyms
 
 **GMID** - Generic Music Identifier
+
+## 3 Design System
