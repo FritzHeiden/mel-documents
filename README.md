@@ -2,7 +2,7 @@
 
 ## Contents
 
-- [1 User Experience](#1-user-experience)
+- [1 Context](#1-user-experience)
   - [1.1 Music Playback](#11-music-playback)
     - [1.1.1 Playback Queue](#111-playback-queue)
   - [1.2 The Mel Ecosystem](#12-core-components)
@@ -13,12 +13,13 @@
       - [Playlists](#playlists)
       - [Collections](#collections)
       - [Local Profiles](#local-profiles)
+    - [1.2.4 Relations and capabilities](#124-relations-and-capabilities)
   - [1.3 Listening Parties](#13-listening-parties)
   - [1.4 Plugin System](#14-plugin-system)
 - [2 Architecture](#2-architecture)
 - [3 Design System](#3-design-system)
 
-## 1 User Experience
+## 1 Context
 
 Mel is a music organizer and player, that connects to other instances of
 itself, allowing synchronization of tracks and streaming between devices.
@@ -219,6 +220,15 @@ must be confirmed by an administrator every time access to it is requested.
 When the access session for the library or device expires, an administrator
 has to confirm access again.
 
+#### 1.2.4 Relations and capabilities
+
+The following context diagram expresses how each Mel Instance integrates into 
+the broader Mel Ecosystem and what part they inact. Note that the actual types 
+of instances involved in any use case may differ, depending on what the user 
+actually uses in their setup.
+
+![Context Diagram](./mel-context.jpg)
+
 ### 1.3 Listening Parties
 
 Listening parties allow multiple users to take control over one player. Every
@@ -254,6 +264,7 @@ TODO:
 
 - C4 Model: context diagram, container diagram?
 - interfaces: HTTP API and libraries
+
 
 ### Main Components
 
