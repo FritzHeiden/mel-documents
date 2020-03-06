@@ -13,11 +13,16 @@
       - [Playlists](#playlists)
       - [Collections](#collections)
       - [Local Profiles](#local-profiles)
-    - [1.2.4 Relations and capabilities](#124-relations-and-capabilities)
   - [1.3 Listening Parties](#13-listening-parties)
   - [1.4 Plugin System](#14-plugin-system)
-- [2 Architecture](#2-architecture)
-- [3 Design System](#3-design-system)
+- [2 Ecosystem Architecture](#2-ecosystem-architecture)
+  - [2.1 User Authentication](#21-user-authentication)
+  - [2.2 REST APIs](#22-rest-apis)
+    - [2.2.1 Data Types](#221-data-types)
+    - [2.2.2 Mel Library API](#222-mel-library-api)
+    - [2.2.3 Mel User Profiles API](#223-mel-user-profiles-api)
+    - [2.2.4 Mel Playback API](#224-mel-playback-api)
+- [3 Design](#3-design)
 
 ## 1 Context
 
@@ -220,14 +225,7 @@ must be confirmed by an administrator every time access to it is requested.
 When the access session for the library or device expires, an administrator
 has to confirm access again.
 
-#### 1.2.4 Relations and capabilities
-
-The following context diagram expresses how each Mel Instance integrates into 
-the broader Mel Ecosystem and what part they inact. Note that the actual types 
-of instances involved in any use case may differ, depending on what the user 
-actually uses in their setup.
-
-![Context Diagram](./mel-context.jpg)
+[↑ top](#mel-specification)
 
 ### 1.3 Listening Parties
 
@@ -244,6 +242,8 @@ single host to the party. Additionally, when the party is over, every
 participant can revisit the tracks of past parties, to, for example, create
 playlists from it. For better identification, each party has a title.
 
+[↑ top](#mel-specification)
+
 ### 1.4 Plugin System
 
 A plugin system allows third parties to extend Mel's capabilities. This also 
@@ -258,332 +258,146 @@ services like Last.fm.
 
 [↑ top](#mel-specification)
 
-## 2 Architecture
+## 2 Ecosystem Architecture
+
+The Mel Ecosystem consists of **Mel Instances** that communicate with 
+each other using the **HTTP 1.1** protocol with a **standardized REST 
+API**. The HTTP methods POST, GET, PUT and DELETE are used to proactively 
+invoke an action and transfer data to and from a remote Mel Instance. Server 
+sent events (SSEs) are used notify other instances of events, upon which they 
+react accordingly.
+
+![Context Diagram](./mel-context.jpg)
+
+### 2.1 User Authentication
 
 TODO:
 
-- C4 Model: context diagram, container diagram?
-- interfaces: HTTP API and libraries
+- describe how user authenticate themselves on different instances
+
+[↑ top](#mel-specification)
+
+### 2.2 REST APIs
+
+Each instance in the ecosystem is supposed to implement at least one of the 
+following APIs in order for other instances to communicate with it properly.
+
+TODO:
+
+- Using Hypermedia: \_links to show related endpoints, expand query and 
+\_embedded to fetch multiple data sets in one call
+- REST API specification
 
+#### 2.2.1 Data Types
 
-### Main Components
+##### General
 
-There are three main components that are used to build Mel Instances. For each of
-them, there is a specification for its programming API and REST API. Here is an
-overview for each of them:
+###### GMID
 
-The [**Mel Music Database**](#mel-music-database) stores all information about
-tracks that are available locally as a audio file or remotely as a stream.
+```json
+String
+```
 
-- _Meta data_, such as artist name, album title, release year and track title
-- _The Generic Music Identifier (GMID)_ that uniquely identifies a track across
-  all instances of Mel
-- _Source information_, which contains information on possible sources for the
-  actual sound data, like local music files or remote stream capabilities and its
-  quality
+##### Mel Library
 
-The **Mel User Database** stores user data and user generated data.
+###### Artist
 
-- _Authentication information_ like username, password and e-mail
-- _Personalized information_ like displayed name and avatar image
-- _Playlists_ which include a title, thumb image and an ordered list of GMIDs
+```json
+{
+  "gmid": "GMID",
+  "name": "String",
+  "description": "String",
+  "releases": "Array<Album:Short>",
+  "feature_releases": "Array<Album:Short>"
+}
+```
 
-The **Mel Playback Agent**
+###### Album
 
-There are two types of Mel Users:  
-**Registered Mel Users** are registered at a specific Mel Instance and can be
-identified using the &lt;username&gt;@&lt;domain&gt; scheme, where _domain_ is the domain of
-the users User Host Instance. All user data of Registered Mel Users is
-synchronized with its User Host Instance once connecting to it is possible.  
-**Unregistered Mel Users** are local users that do not synchronize data with
-other Mel Instances. They can be upgraded to a Registered Mel Users, which will
-merge data with the existing user.
+**Full:**
 
-## Mel Music Database
+```json
+{
+  "gmid": "GMID",
+  "title": "String",
+  "year": "Integer",
+  "artist": {
+    "gmid": "GMID",
+    "name": "String"
+  },
+  "tracks": "Array<Track:Short>"
+}
+```
 
-### Properties
+**Short:**
 
-A **Unique Database ID** is generated when the database first initializes. It
-is a UUIDv1, so the it can be uniquely identified across multiple Mel Instances.
+```json
+{
+  "gmid": "GMID",
+  "title": "String",
+  "year": "Integer"
+}
+```
 
-The **Database Name** helps users to identify different Music Database more
-easily.
+###### Track
 
-### Used datasets
+**Full:**
 
-- [**Music Database**](#music-database)
-- [**File Source**](#file-source)
-- [**Stream Source**](#stream-source)
-- [**Track**](#track)
-- [**Album**](#album)
-- [**Artist**](#artist)
+```json
+{
+  "gmid": "GMID",
+  "title": "String",
+  "artist": {
+    "gmid": "GMID",
+    "name": "String"
+  },
+  "album": {
+    "gmid": "GMID",
+    "title": "String"
+  },
+  "duration": "Integer",
+  "locations": "Array<Location>"
+}
+```
 
-### Programming API
+**Short:**
 
-#### General
+```json
+{
+  "gmid": "GMID",
+  "title": "String",
+  "duration": "Integer"
+}
+```
 
-##### Read Database ID
+###### Location
 
-Returns the unique database ID of the current instance.
+```json
+{
+  "gmid": "GMID",
+  "host": "String"
+}
+```
 
-_Return value_: Database ID
+#### 2.2.2 Mel Library API
 
-##### Read Database Name
+#### 2.2.3 Mel User Profiles API
 
-Return the name of the current database instance.
+#### 2.2.4 Mel Playback API
 
-_Return value_: Database Name
+[↑ top](#mel-specification)
 
-##### Update Database Name
+## 3 Design
 
-Changes the current databases name.
+TODO:
 
-_Parameters_:
-
-- _name_ - the new name the current database is supposed to have.
-
-##### Read Database Logo
-
-##### Update Database Logo
-
-### Tracks
-
-##### Create Track
-
-Creates a new track entry based on the provided Track data.
-
-_Parameters_:
-
-- _Track dataset_ - the track to create
-
-##### Read Track
-
-Reads a tracks meta data by Track GMID.
-
-_Parameters_:
-
-- _Track GMID_ - the GMID of the track to read
-
-_Return value_: Track dataset
-
-##### Update Track
-
-Updates a Track dataset by Track GMID.
-
-_Parameters_:
-
-- _Track GMID_ - the GMID of the track to update
-- _Track dataset_ - the dataset to update to current with
-
-##### Delete Track
-
-Deletes a track by Track GMID.
-
-_Parameters_:
-
-- _Track GMID_ - GMID of the track to delete
-
-##### Find Tracks
-
-Fuzzy finds tracks by their title.
-
-_Parameters_:
-
-- _search string_ - the string to find tracks by
-
-#### Albums
-
-##### Create Album
-
-##### Read Album
-
-##### Read Album Cover
-
-##### Read Albums
-
-Reads all available albums in a specific range.
-
-_Parameters_:
-
-- _start position_ - the number in the total set of albums to start with
-- _count_ - the number of albums to return that consecutively follow the album at
-  _start position_
-
-##### Update Album
-
-##### Update Album Cover
-
-##### Delete Album
-
-##### Find Album
-
-#### Artists
-
-##### Create Artist
-
-##### Read Artist
-
-##### Read Artist Thumbnail
-
-##### Read Artist Background
-
-##### Update Artist
-
-##### Delete Artist
-
-##### Find Artist
-
-#### Sources
-
-##### Create Source
-
-##### Read Source
-
-##### Update Source
-
-##### Delete Source
-
-#### Music Databases
-
-##### Create Music Database
-
-##### Read Music Database
-
-##### Update Music Database
-
-##### Delete Music Database
-
-#### Permissions
-
-##### Create Permission
-
-Creates a permission for a specific user with an access token.
-
-_Parameters_:
-
-- _user ID_ - the ID of the user to create a permission for
-
-_Return value_: Access token
-
-##### Read Permission
-
-Reads a music database permission by access token.
-
-_Parameters_:
-
-- _access token_ - token used to read the users permission
-
-_Return value_: Music Database Permission
-
-##### Update Permission
-
-_Parameters_:
-
-- _access token_ - token of the permission to update
-- _Music Database Permission_ - the new Music Database Permission
-
-##### Delete Permission
-
-Removes a users permission and therefore revoking any access privileges to the
-Music Database.
-
-_Parameters_:
-
-- _access token_ - token of the permission to delete
-
-##### Create Permission Group
-
-Creates a new permission group containing a set of access privileges.
-
-_Parameters_:
-
-- _Permission Group_
-
-##### Read Permission Group
-
-Reads a permission group by its name.
-
-_Parameters_:
-
-- _name_ - the name of the permission group to read
-
-_Return value_: Permission Group
-
-##### Read Permission Groups
-
-Reads all available permission group names.
-
-_Return value_: List of permission group names
-
-##### Update Permission Group
-
-##### Delete Permission Group
-
-### REST API
-
-## Datasets
-
-##### Music Database
-
-- _host_
-- _name_
-- _logo_
-- _id_
-
-##### File Source
-
-- _track GMID_
-- _file path_
-- _format_
-- _bitrate_
-
-##### Stream Source
-
-- _track GMID_
-- _available bitrates_
-- _remote music database id_
-
-##### Track
-
-- _GMID_
-- _title_
-- _album GMID_
-- _number_
-- _tags_
-- _featured artist GMID_
-
-##### Album
-
-- _GMID_
-- _title_
-- _artist GMID_
-- _tags_
-
-##### Artist
-
-- _GMID_
-- _name_
-- _tags_
-
-##### User
-
-- _ID_ - for registered users the ID is &lt;username&gt;@&lt;domain&gt;, whereas
-  unregistered users are identified using a UUIDv1
-- _username_ - the username is unique where the user was registered
-- _display name_ - the name used to display in graphical interfaces
-
-##### Music Database Permission
-
-- _access token_ - the token with which the user can access the music database
-- _user ID_ - the ID of the user that is granted the permission
-- _permission groups_ - list of permission groups
-
-##### Permission Group
-
-- _name_ - unique identifier of the permission group, specified by a user
-- _privileges_ - set of key-value pairs specifying the users privileges
+- typograhy
+- colors
 
 ## Glossary
+
+TODO:
+- update terms
 
 ##### Mel Instance
 
@@ -603,8 +417,3 @@ A Mel Instance, which implements the Mel Music Database and its REST API.
 An ID that is generated from a tracks essential meta data.
 See [GMID Generator](https://github.com/FritzHeiden/gmid-generator)
 
-# Acronyms
-
-**GMID** - Generic Music Identifier
-
-## 3 Design System
